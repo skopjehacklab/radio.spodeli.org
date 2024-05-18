@@ -1,0 +1,41 @@
+#
+# Systemd unit file for radio.spodeli.org patched streamreapper
+#
+
+[Unit]
+Description=streamripper@radio.spodeli.org/%i
+After=network.target
+
+[Service]
+WorkingDirectory=/home/%i
+
+# Configuration
+EnvironmentFile=/home/%i/etc/radio.env
+
+# Lifecycle
+Type=simple
+ExecStartPre=/usr/bin/echo "streamripper-%i was down, restarting..."
+ExecStart=/opt/spodeli_radio/scripts/main-mp3-recorder.sh
+ExecStartPost=/usr/bin/sleep 5
+ExecStartPost=/opt/spodeli_radio/scripts/resume-recording.sh
+Restart=always
+RestartSec=7
+
+# Logging
+SyslogIdentifier=streamripper-%i
+
+# Security
+User=%i
+#Group=
+PrivateTmp=yes
+NoNewPrivileges=true
+PrivateUsers=true
+ProtectSystem=strict
+ProtectHome=tmpfs
+ReadWritePaths=/home/%i/log/
+ReadWritePaths=/home/%i/var/
+ReadWritePaths=/home/%i/public_html/
+ReadOnlyPaths=/opt/spodeli_radio/
+
+[Install]
+WantedBy=multi-user.target

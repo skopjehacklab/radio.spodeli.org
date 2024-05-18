@@ -1,0 +1,5 @@
+User-agent: *
+Crawl-Delay: 23
+Allow: /kanal103/index.html
+Allow: /kanal103/playlists/*.html
+Disallow: /

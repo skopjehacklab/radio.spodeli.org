@@ -1,0 +1,140 @@
+diff -rup streamripper-1.64.6/console/streamripper.c streamripper-1.64.6/console/streamripper.c
+--- streamripper-1.64.6/console/streamripper.c	2009-03-08 16:00:32.000000000 +0100
++++ streamripper-1.64.6/console/streamripper.c	2013-05-08 01:30:16.021048495 +0200
+@@ -301,6 +301,7 @@ print_usage (FILE* stream)
+ #endif
+     fprintf(stream, "      -T             - Truncate duplicated tracks in incomplete\n");
+     fprintf(stream, "      -E command     - Run external command to fetch metadata\n");
++    fprintf(stream, "      -e command     - Run external command with metadata from mp3 stream as params\n");
+     fprintf(stream, "      --quiet        - Don't print ripping status to console\n");
+     fprintf(stream, "      --stderr       - Print ripping status to stderr (old behavior)\n");
+     fprintf(stream, "      --debug        - Save debugging trace\n");
+@@ -389,6 +390,11 @@ parse_arguments (STREAM_PREFS* prefs, in
+ 	    i++;
+ 	    strncpy(prefs->ext_cmd, argv[i], SR_MAX_PATH);
+ 	    break;
++	case 'e':
++		OPT_FLAG_SET(prefs->flags, OPT_EXPORT_TAGS, 1);
++		i++;
++		strncpy (prefs->export_tags_cmd, argv[i], SR_MAX_PATH);
++		break;
+ 	case 'f':
+ 	    i++;
+ 	    fprintf (stderr, "Error: -f dropstring option is obsolete. "
+diff -rup streamripper-1.64.6/lib/prefs.c streamripper-1.64.6/lib/prefs.c
+--- streamripper-1.64.6/lib/prefs.c	2009-03-08 15:27:24.000000000 +0100
++++ streamripper-1.64.6/lib/prefs.c	2013-05-08 01:34:34.508667340 +0200
+@@ -423,6 +423,7 @@ debug_stream_prefs (STREAM_PREFS* prefs)
+     debug_printf ("pls_file = %s\n", prefs->pls_file);
+     debug_printf ("relay_ip = %s\n", prefs->relay_ip);
+     debug_printf ("ext_cmd = %s\n", prefs->ext_cmd);
++    debug_printf ("export_tags_cmd = %s\n", prefs->export_tags_cmd);
+     debug_printf ("useragent = %s\n", prefs->useragent);
+     debug_printf ("relay_port = %d\n", prefs->relay_port);
+     debug_printf ("max_port = %d\n", prefs->max_port);
+diff -rup streamripper-1.64.6/lib/rip_manager.c streamripper-1.64.6/lib/rip_manager.c
+--- streamripper-1.64.6/lib/rip_manager.c	2009-03-30 22:09:24.000000000 +0200
++++ streamripper-1.64.6/lib/rip_manager.c	2013-05-08 00:58:05.637299461 +0200
+@@ -601,6 +601,37 @@ start_ripping (RIP_MANAGER_INFO* rmi)
+     return ret;	
+ }
+ 
++/*
++	replace dangerous chars before passing as parameters to external application
++	converting to base64 is likely a better idea
++*/
++void
++escape_quotes (char *str, char *clean )
++{
++	int i;
++	for (i = 0; i <= strlen(str); i++) {
++		if (str[i] == '$' || str[i] == '\'' || str[i] == '`')
++			clean[i] = '|';
++		else
++			clean[i] = str[i];
++	}
++}
++
++/* Send metadata to external program. */
++int
++export_metadata (RIP_MANAGER_INFO* rmi, TRACK_INFO* ti) {
++	char artist[MAX_TRACK_LEN * 2] = {0};
++	char title[MAX_TRACK_LEN * 2] = {0};
++	escape_quotes(ti->artist, artist);
++	escape_quotes(ti->title, title);
++	char s[SR_MAX_PATH + 4 * MAX_TRACK_LEN + 10];
++	sprintf(s, "%s '%s' '%s' & > /dev/null 2>&1", rmi->prefs->export_tags_cmd, artist, title);
++	debug_printf ("Export Metadata: %s\n", s);
++	artist[0] = '\0';
++	title[0] = '\0';
++	return system(s);
++}
++
+ /* Winamp plugin needs to get content type */
+ int
+ rip_manager_get_content_type (RIP_MANAGER_INFO* rmi)
+diff -rup streamripper-1.64.6/lib/rip_manager.h streamripper-1.64.6/lib/rip_manager.h
+--- streamripper-1.64.6/lib/rip_manager.h	2009-03-31 03:10:47.000000000 +0200
++++ streamripper-1.64.6/lib/rip_manager.h	2013-05-08 01:39:49.227858335 +0200
+@@ -65,6 +65,7 @@
+ #define OPT_TRUNCATE_DUPS	0x00001000	// truncate file in the incomplete directory already present in complete
+ #define OPT_INDIVIDUAL_TRACKS	0x00002000	// should we write the individual tracks?
+ #define OPT_EXTERNAL_CMD	0x00004000	// use external command to get metadata?
++#define OPT_EXPORT_TAGS	0x00040000	// pass metadata to external app
+ #define OPT_ADD_ID3V1		0x00008000	// Add ID3V1
+ #define OPT_ADD_ID3V2		0x00010000	// Add ID3V2
+ 
+@@ -85,6 +86,7 @@
+ #define GET_TRUNCATE_DUPS(flags)		(OPT_FLAG_ISSET(flags, OPT_TRUNCATE_DUPS))
+ #define GET_INDIVIDUAL_TRACKS(flags)		(OPT_FLAG_ISSET(flags, OPT_INDIVIDUAL_TRACKS))
+ #define GET_EXTERNAL_CMD(flags)			(OPT_FLAG_ISSET(flags, OPT_EXTERNAL_CMD))
++#define GET_EXPORT_TAGS(flags)			(OPT_FLAG_ISSET(flags, OPT_EXPORT_TAGS))
+ #define GET_ADD_ID3V1(flags)			(OPT_FLAG_ISSET(flags, OPT_ADD_ID3V1))
+ #define GET_ADD_ID3V2(flags)			(OPT_FLAG_ISSET(flags, OPT_ADD_ID3V2))
+ 
+@@ -110,4 +110,6 @@
+ enum OverwriteOpt string_to_overwrite_opt (char* str);
+ int rip_manager_get_content_type (RIP_MANAGER_INFO* rmi);
+ 
++int export_metadata (RIP_MANAGER_INFO *rmi, TRACK_INFO* ti);
++
+ #endif //__RIP_MANANGER_H__
+diff -rup streamripper-1.64.6/lib/ripstream.c streamripper-1.64.6/lib/ripstream.c
+--- streamripper-1.64.6/lib/ripstream.c	2009-03-31 02:36:29.000000000 +0200
++++ streamripper-1.64.6/lib/ripstream.c	2013-05-08 01:12:25.105127601 +0200
+@@ -482,6 +482,12 @@ ripstream_rip_mp3 (RIP_MANAGER_INFO* rmi
+ 	    strcpy (rmi->current_track.raw_metadata, rmi->no_meta_name);
+ 	}
+ 	msnprintf (rmi->current_track.track_a, MAX_HEADER_LEN, m_("0"));
++
++	/* pass the initial metadata to external command */
++	if (GET_EXPORT_TAGS(rmi->prefs->flags)) {
++		export_metadata (rmi, &rmi->current_track);
++	}
++
+ 	ret = start_track_mp3 (rmi, &rmi->current_track);
+ 	if (ret != SR_SUCCESS) {
+ 	    debug_printf ("start_track_mp3 failed(#1): %d\n",ret);
+@@ -535,6 +541,11 @@ ripstream_rip_mp3 (RIP_MANAGER_INFO* rmi
+ 	    real_ret = ret;
+ 	rmi->cue_sheet_bytes += pos2;
+ 
++	/* pass the new metadata to external command */
++	if (GET_EXPORT_TAGS(rmi->prefs->flags)) {
++		export_metadata (rmi, &rmi->new_track);
++	}
++
+ 	/* Start next track */
+ 	ret = start_track_mp3 (rmi, &rmi->new_track);
+ 	if (ret != SR_SUCCESS)
+diff -rup streamripper-1.64.6/lib/srtypes.h streamripper-1.64.6/lib/srtypes.h
+--- streamripper-1.64.6/lib/srtypes.h	2009-03-31 00:18:41.000000000 +0200
++++ streamripper-1.64.6/lib/srtypes.h	2013-05-08 01:36:49.499035711 +0200
+@@ -453,6 +453,7 @@ struct stream_prefs
+     char relay_ip[SR_MAX_PATH];		// optional, ip to bind relaying 
+                                         //  socket to
+     char ext_cmd[SR_MAX_PATH];          // cmd to spawn for external metadata
++    char export_tags_cmd[SR_MAX_PATH];	// cmd to export metadata
+     char useragent[MAX_USERAGENT_STR];	// optional, use a different useragent
+     u_short relay_port;			// port to use for the relay server
+ 					//  GCS 3/30/07 change to u_short

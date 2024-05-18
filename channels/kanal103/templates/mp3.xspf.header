@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<playlist xmlns="http://xspf.org/ns/0/" version="1">
+  <title>Канал 103 - Снимена програма од последните 24 часа</title>
+  <info>http://radio.spodeli.org/kanal103/</info>
+  <location>http://radio.spodeli.org/kanal103/24mp3.xspf</location>
+  <date>#getxmldate</date>
+  <trackList>

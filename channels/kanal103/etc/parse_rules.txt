@@ -1,0 +1,14 @@
+# rules for winamp/edamp
+m/63/e
+m/Winamp.*/e
+m/ÿû.*/e
+#m/\<html.*/e
+
+# rules for foobar
+s/[[:space:]]*\[foobar2000\]//
+m/foobar2000.*/e
+
+m/^[[:space:]]+-[[:space:]]+(.*)[[:space:]]*$/A1
+m/^[[:space:]]*(.*?[^-[:space:]])[[:space:]]+-[[:space:]]+(.*)[[:space:]]*$/A1T2
+m/^[[:space:]]*([^-]*[^-[:space:]])[[:space:]]*-[[:space:]]*(.*)[[:space:]]*$/A1T2
+

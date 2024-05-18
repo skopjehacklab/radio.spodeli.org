@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+	<title>Канал 103 - #gettitle</title>
+	<style>
+		li, pre { line-height: 1.4em }
+		body { max-width: 90%; margin: 1em }
+		pre span:hover { color: white; background: black }
+	</style>
+</head>
+<body>
+	<h2><a href="http://radio.spodeli.org/kanal103/">КАНАЛ 103</a> - #gettitle</h2>
+	<h3>#getdate</h3>
+	<audio id="recordedstream0" preload="metadata" controls>
+		<source src="//radio.spodeli.org/kanal103/#getbasepath.ogg" type="audio/ogg; codecs=vorbis" />
+		<source src="//radio.spodeli.org/kanal103/#getbasepath.mp3" type="audio/mpeg" />
+		Твојот бровсер не поддржува HTML5 audio.
+	</audio>
+	<div id="trackinfo">Клик врз лизгачот за директен пристап до саканото време</div>
