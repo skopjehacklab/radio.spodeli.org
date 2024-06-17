@@ -30,12 +30,18 @@ User=%i
 PrivateTmp=yes
 NoNewPrivileges=true
 PrivateUsers=true
+PrivateDevices=yes
 ProtectSystem=strict
 ProtectHome=tmpfs
+BindReadOnlyPaths=/home/%i
 ReadWritePaths=/home/%i/log/
 ReadWritePaths=/home/%i/var/
 ReadWritePaths=/home/%i/public_html/
-ReadOnlyPaths=/opt/spodeli_radio/
+IPAddressDeny=127.0.0.0/8
+RestrictAddressFamilies=AF_INET
+ProtectClock=yes
+ProtectProc=invisible
+InaccessiblePaths=/dev/shm
 
 [Install]
 WantedBy=multi-user.target
