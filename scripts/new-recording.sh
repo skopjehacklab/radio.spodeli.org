@@ -17,7 +17,7 @@ cd "$WEB_ROOT" || exit 1
 
 basepath=$(cat "$APP_ROOT/var/recording" 2> /dev/null)
 if [ "$new_basepath" == "$basepath" ]; then # exit early
-	echo -e "[$new_basepath] Recording of '$artist' already active, skipping" | tee - | ts '%F %T' >> "$LOG_FILE"
+	echo -e "[$new_basepath] Recording of '$artist' already active, skipping" | tee >(cat 1>&2) | ts '%F %T' >> "$LOG_FILE"
 	exit 2
 fi
 # init

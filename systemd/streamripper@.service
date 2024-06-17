@@ -16,8 +16,8 @@ EnvironmentFile=/home/%i/etc/radio.env
 Type=simple
 ExecStartPre=/usr/bin/echo "streamripper-%i was down, restarting..."
 ExecStart=/opt/spodeli_radio/scripts/main-mp3-recorder.sh
-ExecStartPost=/usr/bin/sleep 5
-ExecStartPost=/opt/spodeli_radio/scripts/resume-recording.sh
+#ExecStartPost=/usr/bin/sleep 5
+#ExecStartPost=/opt/spodeli_radio/scripts/resume-recording.sh
 Restart=always
 RestartSec=7
 

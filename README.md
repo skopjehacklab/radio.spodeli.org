@@ -179,11 +179,12 @@ sudo chown -R ${RUN_USER} "${APP_ROOT}"/{var,run,log} "${WEB_ROOT}"
 
 ```sh
 # start and enable the service
-systemctl start streamripper@${RUN_USER}
-systemctl enable streamripper@${RUN_USER}
+sudo systemctl start streamripper@${RUN_USER}
+sudo systemctl enable streamripper@${RUN_USER}
 ```
 
 #### weekly schedule recorder
+
 > Important: the schedule must be "full" (24/7) for everything to work properly
 
 ```ini
@@ -192,7 +193,7 @@ CRON_FILE=/home/${RUN_USER}/etc/crontab
 ```
 ```sh
 # add it to RUN_USER crontab
-sudo cat "${CRON_FILE}" >> /var/spool/cron/crontabs/${RUN_USER}
+sudo crontab -u ${RUN_USER} -l | cat - "${CRON_FILE}" | sudo crontab -u ${RUN_USER} -
 ```
 
 ### *templates and html files*

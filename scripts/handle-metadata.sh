@@ -10,7 +10,7 @@ else
 fi
 # unreplace "'", "$", "`" (replaced with "|" before metadata export in streamripper)
 song=$(echo "$song" | sed -e "s_|_'_g")
-artist=$(head -1 nowplaying.utf8)
+artist=$(head -1 nowplaying.utf8 2> /dev/null)
 
 # find last ripped mp3
 unset -v mp3
@@ -23,12 +23,12 @@ if [ -z "$mp3" ]; then
 else
 	## fix garbage at beginning and end
 	#mp3val "$mp3" -f -t -nb -si -l"$LOG_FILE" > /dev/null
-	# round duration (in seconds) to 3 decimals
-	mp3_len=$(LANG=en_US.UTF-8 printf "%.3f" $(soxi -D "$mp3" 2> /dev/null))
-	# strip decimal point to get miliseconds
-	tlen=$(tr -d '.,' <<<"$mp3_len") # TLEN    Length (ms)
+	# get duration in seconds (float)
+	mp3_len=$(soxi -D "$mp3" 2> /dev/null)
+	# convert to miliseconds (int)
+	tlen=$(bc <<<"scale=0; $mp3_len * 1000/1") # TLEN    Length (ms)
 
-	[ -n "$LOG_FILE" ] && echo "last ripped: $mp3 ($mp3_len)" | ts '%F %T' >> "$LOG_FILE" #debug log
+	[ -n "$LOG_FILE" ] && echo "last ripped: $mp3 (${mp3_len/%.*})" | ts '%F %T' >> "$LOG_FILE" #debug log
 
 	# delete file if duration is less than $MP3_MIN_LEN (default 1000) miliseconds
 	if [ $tlen -lt ${MP3_MIN_LEN:-1000} ]; then
