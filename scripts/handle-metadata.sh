@@ -9,7 +9,7 @@ else
 	song="$1 - $2";
 fi
 # unreplace "'", "$", "`" (replaced with "|" before metadata export in streamripper)
-song=$(echo "$song" | sed -e "s_|_'_g")
+song=$(sed -e "s_|_'_g" <<<"$song")
 artist=$(head -1 nowplaying.utf8 2> /dev/null)
 
 # find last ripped mp3
@@ -58,12 +58,19 @@ else
 	fi
 fi
 
-basepath=$(cat "$APP_ROOT/var/recording") # 6/0600-0900
-ts_offset=$(date -r "$APP_ROOT/var/recording" +'%S.%N')
-ts=$(date -d "$ts_offset seconds ago" +'%s.%N')
-
-if [ "$song" != "$(tail -n +3 nowplaying.utf8)" ]; then
+if [ -s "$APP_ROOT/var/recording" ]; then
+	basepath=$(cat "$APP_ROOT/var/recording") # 6/0600-0900
 	timeslot="${basepath:2:2}:${basepath:4:2} - ${basepath:7:2}:${basepath:9:2}"
+	ts_offset=$(date -r "$APP_ROOT/var/recording" +'%S.%N')
+	current_pl=$basepath.txt
+fi
+
+ts=$(date -d "${ts_offset:-0} seconds ago" +'%s.%N')
+
+if [ "$song" == "$(tail -n +3 nowplaying.utf8 2> /dev/null)" ]; then
+	# probably recording restarted
+	[ -n "$basepath" ] && echo "$(date -d @${ts} +'%d.%m.%Y %H:%M:%S') … $song" >> $basepath.parts
+else
 	# update current track info
 	echo -en "${artist}\n${timeslot}\n${song}" > nowplaying.utf8
 	## escape & and "
@@ -76,10 +83,8 @@ if [ "$song" != "$(tail -n +3 nowplaying.utf8)" ]; then
 }});" > parsemusic.js
 
 	# update playlist
-	ts_offset=$(date -r "$APP_ROOT/var/recording" +'%S.%N')
-	ts=$(date -d "$ts_offset seconds ago" +'%s.%N')
 	pl_filename="playlists/$(date -d @${ts} +'%Y_%m_%d')"
-	echo "$(date -d @${ts} +'%d.%m.%Y %H:%M:%S') $song" | tee -a "$basepath".txt >> "$pl_filename".txt
+	echo "$(date -d @${ts} +'%d.%m.%Y %H:%M:%S') $song" | tee -a ${current_pl:-/dev/null} >> "$pl_filename".txt
 
 	# update playlist html-pages
 	[ -f "$pl_filename".html ] || pl_index="playlists/index".html

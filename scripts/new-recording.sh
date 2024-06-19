@@ -37,7 +37,7 @@ echo -e "[$new_basepath] Record '$artist' (duration: $(date -ud @${rec_limit} +'
 rm -f "$new_basepath".*.{mp3,ogg,cue,index} &
 [ -n "$old_pid" ] && mv "$PID_FILE" "$PID_FILE"~
 # update current track info
-song=$(tail -n +3 nowplaying.utf8)
+song=$(tail -n +3 nowplaying.utf8 2> /dev/null)
 echo -en "${artist}\n${timeslot}\n${song}" > nowplaying.utf8
 echo "parseMusic({\"$STATION_ID\": {
 	\"name\": \"$STATION_NAME\",
@@ -47,7 +47,7 @@ echo "parseMusic({\"$STATION_ID\": {
 wait # until old files are removed
 
 # initialize recording playlist
-echo "$start_time … $song" > "$new_basepath".txt && echo -n "$new_basepath" > "$APP_ROOT/var/recording" &
+truncate -s 0 "$new_basepath".{txt,parts} && echo -n "$new_basepath" > "$APP_ROOT/var/recording" &
 # add separator to daily playlist
 echo -e ">>===============<<\n>> $timeslot << $artist\n>>===============<<" >> playlists/$(date +"%Y_%m_%d").txt
 
@@ -56,6 +56,9 @@ SR_OPT='--quiet --stderr --codeset-metadata=windows-1252 --codeset-id3=UTF-8 -i 
 exec -a "streamripper-${STATION_ID}_$1" streamripper "$relay_url" -l $rec_limit $SR_OPT $XS -w "$APP_ROOT/etc/parse_rules.txt" -d "$WEB_ROOT" -a "${new_basepath}.%q" |& sed '/^$/d' | ts '%F %T' >> "$LOG_FILE" &
 # assume ((PID - 2)) is the PID of the first process in the pipe (streamripper)
 new_pid=$(( $! - 2 ))
+
+# add current track (skip if track changed while recording was starting)
+[ -s "$new_basepath".txt ] || echo "$start_time … $song" > "$new_basepath".txt
 # set recording tags
 echo -e "DATE=$(date +%F)\nTITLE=$artist\nALBUM=$STATION_NAME ~ $(date +"%A $timeslot (%d.%m.%Y)")" > "$new_basepath".tag
 
