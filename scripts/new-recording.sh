@@ -88,7 +88,7 @@ if [ -n "$basepath" ]; then # finalize previous recording
 
 	# create recording html-page
 	cat "$APP_ROOT/var/recording".html.header > "$basepath".html
-	echo -e "<pre id='playlist'>\n" >> "$basepath".html
+	echo "<pre id='playlist' class='playlist'>" >> "$basepath".html
 	(cat "$basepath".txt && tail -n +2 "$new_basepath".txt) >> "$basepath".html
 	#echo -e "$start_time Следна емисија - $artist" >> "$basepath".html
 	echo '</pre>' >> "$basepath".html

@@ -13,7 +13,7 @@ d.addEventListener('DOMContentLoaded', function () {
 	var endTime;
 
 	var initPlaylist = function () {
-		var rows = domPlaylist.textContent.slice(1).split('\n');
+		var rows = domPlaylist.textContent.split('\n');
 		//domPlaylist.textContent = "";
 		domDisplay.id = "playtime";
 		var extraTracks = "";
@@ -28,7 +28,7 @@ d.addEventListener('DOMContentLoaded', function () {
 				diff = (parseDate(datetimeparts) - start_date) / 1000;
 			}
 			if (diff < endTime) {
-				playlist[i] = [diff, rows[i].slice(20), "\n" + datetimeparts[0], datetimeparts[1]];
+				playlist[i] = [diff, rows[i].slice(20), (i ? "\n" : '') + datetimeparts[0], datetimeparts[1]];
 			}
 			else {
 				extraTracks += rows[i] + " ×\n";
@@ -38,11 +38,10 @@ d.addEventListener('DOMContentLoaded', function () {
 		var richPlaylist = d.createElement("pre");
 		playlist.forEach((trackInfo, i) => {
 			var htmlTrack = d.createElement("span");
-			htmlTrack.id = trackInfo[0]; // diff
-			htmlTrack.title = "#" + htmlTrack.id;
+			htmlTrack.title = "#" + trackInfo[0];
 			var duration = (i + 1 < playlist.length ? playlist[i + 1][0] : endTime) - trackInfo[0];
 			trackInfo.push(['(', duration < 60 ? duration : secondsToString(duration), ')'].join(''));
-			htmlTrack.textContent = ["\n", rows[i], ' ', trackInfo[4]].join('');
+			htmlTrack.textContent = [i ? "\n" : '', rows[i], ' ', trackInfo[4]].join('');
 			htmlTrack.onclick = seekTrack;
 			htmlTrack.style.cursor = 'pointer';
 			richPlaylist.appendChild(htmlTrack);
@@ -152,8 +151,9 @@ d.addEventListener('DOMContentLoaded', function () {
 	}
 
 	var seekTrack = function () {
-		domPlayer.currentTime = this.id + ".1";
-		wl.hash = this.id;
+		var seconds = this.title.slice(1);
+		domPlayer.currentTime = seconds + ".1";
+		wl.hash = seconds;
 		if (domPlayer.paused) {
 			domPlayer.play();
 		}
@@ -168,7 +168,7 @@ d.addEventListener('DOMContentLoaded', function () {
 		if (new_index > -1) {
 			track = playlist[new_index];
 			d.getElementById("trackinfo").innerHTML = ['<b>', track[1], '</b> <small>[ -<span id="timeleft"></span> ]</small>'].join('');
-			domPlaylist.children[track_index].innerHTML = ['<b>', track[2], domDisplay.outerHTML, "‣🔊", track[1], track[4], '</b>'].join(" ");
+			domPlaylist.children[track_index].innerHTML = ['<b>', [track[2], domDisplay.outerHTML, "‣🔊", track[1], track[4]].join(' '), '</b>'].join('');
 			if (!domPlayer.paused) {
 				d.title = track[1] + maintitle;
 			}
