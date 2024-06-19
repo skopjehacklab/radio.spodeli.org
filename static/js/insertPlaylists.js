@@ -9,7 +9,8 @@ var insertPlaylists = function(expanded) {
 				this.style.fontWeight = 'bold';
 				this.style.textDecoration = 'underline';
 				this.nextElementSibling.style.display = 'none';
-			} else {
+			}
+			else {
 				this.style.fontWeight = 'normal';
 				this.style.textDecoration = 'none';
 				this.nextElementSibling.style.display = 'block';
@@ -40,7 +41,8 @@ var insertPlaylists = function(expanded) {
 								var start_date = parseDate(datetimeparts);
 								var diff = 0;
 								htmlTrack.textContent = rows[i];
-							} else {
+							}
+							else {
 								diff = (parseDate(datetimeparts) - start_date) / 1000;
 								htmlTrack.textContent = "\n" + rows[i];
 							}

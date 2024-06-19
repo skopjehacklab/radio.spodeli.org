@@ -1,4 +1,5 @@
 var d = document; // for minifying
+// get station id from script path query string
 var id = d.currentScript.getAttribute('src').split('?')[1];
 
 function parseMusic(results) {
@@ -14,7 +15,8 @@ function parseMusic(results) {
 		if (atWrapper.display === 'none') {
 			atWrapper.display = '';
 		}
-	} else if (atWrapper.display !== 'none') {
+	}
+	else if (atWrapper.display !== 'none') {
 		atWrapper.display = 'none';
 	}
 }
