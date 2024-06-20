@@ -2,6 +2,7 @@
 #env: STREAM_URL RELAY_PORT WEB_BASE RADIO_APP STATION_ID STATION_NAME STATION_URL APP_ROOT WEB_ROOT DELAY OGG_BITRATE OVERLAP XS MP3_MIN_LEN
 LOG_FILE="$APP_ROOT/log/streamripper"-cron.log
 PID_FILE="$APP_ROOT/run/$STATION_ID"_recording.pid
+cd "$WEB_ROOT" || exit 1
 BASE_URL="$WEB_BASE/$STATION_ID"
 # $1: HHMM-HHMM (timeslot begin-end, eg. 0600-0900)
 new_rec="$(date +%w)/$1" # 6/0600-0900
@@ -11,7 +12,6 @@ artist="${2/&/\&}" # escape '&' for proper replacment with sed
 # $3: if set, override the configured recording overlap
 OVERLAP=${3:-$OVERLAP} # seconds to continue recording after timeslot ends
 
-cd "$WEB_ROOT" || exit 1
 # offset buffering to sync playlist with broadcast time
 [ ${DELAY:-0} -gt 0 ] && sleep $DELAY
 
@@ -91,15 +91,16 @@ if [ -n "$prev_rec" ]; then # finalize previous recording
 	ln -sf "${prev_rec##*/}".0000.mp3 "$prev_rec".mp3
 	rm -f "$prev_rec".ogg
 
-	# create recording html-page
+	# create recording html playlist
 	echo "<pre id='playlist' class='playlist'>" >> "$rec_html"
 	playlist="$(tail -n +2 "$new_rec".txt | sort -u "$prev_rec".{txt,parts} "$new_rec".parts - | tee -a "$rec_html" | cut -c 21-)"
 	echo '</pre>' >> "$rec_html"
+	# add recording html footer
 	dl_filename=$(date -d @${base_ts} +%F)_$(basename "$prev_rec")
-	sed -e "s|#getprev_rec|$prev_rec|g" -e "s|#getdlname|$dl_filename|g" -e "s|#getnexttitle|$artist|" \
-		-e "s|#getnextdate|$(date +%A), $timeslot|" -e "s|#getnextprev_rec|$new_rec|g" \
+	sed -e "s|#getbasepath|$prev_rec|g" -e "s|#getdlname|$dl_filename|g" -e "s|#getnexttitle|$artist|" \
+		-e "s|#getnextdate|$(date +%A), $timeslot|" -e "s|#getnextbasepath|$new_rec|g" \
 		"$APP_ROOT/templates/recording".html.footer >> "$rec_html"
-
+	# publish the recording html page
 	mv "$rec_html" "$prev_rec".html
 
 	# metadata info
@@ -143,7 +144,7 @@ fi
 
 # prepare templates for the new recording
 rec_date="$(date +'%A, %e %B %Y') [<small>$timeslot</small>]"
-sed -e "s|#gettitle|$artist|" -e "s|#getdate|$rec_date|" -e "s|#getprev_rec|$new_rec|g" \
+sed -e "s|#gettitle|$artist|" -e "s|#getdate|$rec_date|" -e "s|#getbasepath|$new_rec|g" \
 	"$APP_ROOT/templates/recording".html.header > "$rec_html"
 
 exit
