@@ -6,7 +6,8 @@
 	<style>
 		li, pre { line-height: 1.4em }
 		body { max-width: 90%; margin: 1em }
-		pre span:hover { color: white; background: black }
+		pre span:hover { color: white; background: black; cursor: pointer }
+		audio { min-width: 32% }
 	</style>
 </head>
 <body>
@@ -17,5 +18,5 @@
 		<source src="//radio.spodeli.org/kanal103/#getbasepath.mp3" type="audio/mpeg" />
 		Твојот бровсер не поддржува HTML5 audio.
 	</audio>
-	<div id="trackinfo">Клик врз лизгачот за директен пристап до саканото време</div>
+	<div><strong id="trackname"></strong> <small title="Преостанато време">[ <span id="timeleft">Клик врз лизгачот за директен пристап до саканото време</span> ]</small></div>
 	<br>
