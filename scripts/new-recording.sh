@@ -49,7 +49,12 @@ wait # until old files are removed
 # initialize recording playlist
 truncate -s 0 "$new_rec".{txt,parts} && echo -n "$new_rec" > "$APP_ROOT/var/recording" &
 # add separator to daily playlist
-echo -e ">>===============<<\n>> $timeslot << $artist\n>>===============<<" >> playlists/$(date +"%Y_%m_%d").txt
+pl_separator="$APP_ROOT/templates/playlist".txt.separator
+if [ -r "$pl_separator" ]; then
+	sed -e "s|#gettitle|$artist|" -e "s|#gettimeslot|$timeslot|" "$pl_separator" >> playlists/$(date +"%Y_%m_%d").txt
+else
+	echo -e ">>===============<<\n>> $timeslot << $artist\n>>===============<<" >> playlists/$(date +"%Y_%m_%d").txt
+fi
 
 # start recording (default streamripper configuration is in ~/.config/streamripper/streamripper.ini)
 SR_OPT='--quiet --stderr --codeset-metadata=windows-1252 --codeset-id3=UTF-8 -i -o never -k 0 -A -s'
@@ -94,7 +99,7 @@ if [ -n "$prev_rec" ]; then # finalize previous recording
 	# create recording html playlist
 	echo "<pre id='playlist' class='playlist'>" >> "$rec_html"
 	playlist="$(tail -n +2 "$new_rec".txt | sort -u "$prev_rec".{txt,parts} "$new_rec".parts - | tee -a "$rec_html" | cut -c 21-)"
-	echo '</pre>' >> "$rec_html"
+	echo "</pre><script src='https:$WEB_BASE/js/trackplayer.js'></script>" >> "$rec_html"
 	# add recording html footer
 	dl_filename=$(date -d @${base_ts} +%F)_$(basename "$prev_rec")
 	sed -e "s|#getbasepath|$prev_rec|g" -e "s|#getdlname|$dl_filename|g" -e "s|#getnexttitle|$artist|" \
@@ -143,8 +148,8 @@ if [ -n "$prev_rec" ]; then # finalize previous recording
 fi
 
 # prepare templates for the new recording
-rec_date="$(date +'%A, %e %B %Y') [<small>$timeslot</small>]"
-sed -e "s|#gettitle|$artist|" -e "s|#getdate|$rec_date|" -e "s|#getbasepath|$new_rec|g" \
+sed -e "s|#gettitle|$artist|" -e "s|#getdate|$(date +'%A, %e %B %Y')|" \
+	-e "s|#gettimeslot|$timeslot|" -e "s|#getbasepath|$new_rec|g" \
 	"$APP_ROOT/templates/recording".html.header > "$rec_html"
 
 exit

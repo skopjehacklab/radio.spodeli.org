@@ -13,38 +13,40 @@ d.addEventListener('DOMContentLoaded', function () {
 
 	var initPlaylist = function () {
 		var diff = 0;
-		var rows = pre_playlist.textContent.split('\n');
+		var rows = pre_playlist.textContent.split('\n'); // last row is empty
 		var richPlaylist = d.createElement("pre");
 		richPlaylist.title = "Клик врз трака за директен пристап";
 		var extraTracks = "";
 
 		for (var i = 0; i < rows.length - 1; i++) {
 			var datetimeparts = rows[i].split(' ', 2);
-			if (i == 0) {
+			if (i === 0) {
 				rec_datetime = parseDate(datetimeparts);
 			}
 			else {
 				diff = (parseDate(datetimeparts) - rec_datetime) / 1000;
+				datetimeparts[0] = "\n" + datetimeparts[0];
 			}
+
 			if (diff < domPlayer.duration) {
-				playlist[i] = [diff, (i ? "\n" : '') + datetimeparts[0], datetimeparts[1], rows[i].slice(20)];
+				playlist.push([diff, datetimeparts[0], datetimeparts[1], rows[i].slice(20)]);
 			}
 			else {
 				extraTracks += rows[i] + " ×\n";
 			}
 		}
 
-		playlist.forEach((trackInfo, i) => {
+		for (var i = 0; i < playlist.length; i++) {
 			var htmlTrack = d.createElement("span");
-			htmlTrack.title = "#" + trackInfo[0];
-			var duration = (i + 1 < playlist.length ? playlist[i + 1][0] : domPlayer.duration >> 0) - trackInfo[0];
-			trackInfo.push(['(', duration < 60 ? duration : formatDuration(duration), ')'].join(''));
-			htmlTrack.textContent = [i ? "\n" : '', rows[i], ' ', trackInfo[4]].join('');
+			htmlTrack.title = "#" + playlist[i][0];
+			var duration = (i + 1 < playlist.length ? playlist[i + 1][0] : domPlayer.duration >> 0) - playlist[i][0];
+			playlist[i].push(['(', duration < 60 ? duration : formatDuration(duration), ')'].join(''));
+			htmlTrack.textContent = playlist[i].slice(1).join(' ');
 			htmlTrack.onclick = seekTrack;
 			richPlaylist.appendChild(htmlTrack);
-		});
+		}
 		pre_playlist.parentNode.replaceChild(richPlaylist, pre_playlist);
-		pre_playlist.textContent = "";
+		//pre_playlist.textContent = "";
 		pre_playlist = richPlaylist;
 
 		if (typeof localStorage["volume"] !== 'undefined' && localStorage["volume"] !== null) {

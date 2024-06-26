@@ -196,7 +196,78 @@ CRON_FILE=/home/${RUN_USER}/etc/crontab
 sudo crontab -u ${RUN_USER} -l | cat - "${CRON_FILE}" | sudo crontab -u ${RUN_USER} -
 ```
 
-### *templates and html files*
+## templates and html files
+
+> channel template files: `${APP_ROOT}/templates`  
+> channel html web-root: `${WEB_ROOT}`  
+
+### time-slot (scheduled recording) page
+
+base path: *`{{ day-of-week }}/{{ timeslot }}.*`* **`%w/%H%M-%H%M.{html,txt,tag,parts?}`**
+
+stream related files: [`0XXX.`]**`{mp3,ogg,cue,index}`**
+
+> when the stream is interrupted, additional files are created with extension prefixed by part number (4 digit, zero padded)
+
+#### templates / variables
+
+web page is created by joining *.header*, generated recording playlists (wrapped in `<pre class='playlist'>`) and *.footer*
+
+- *recording.html.header*  
+`#getbasepath` *`g`*  
+`#gettitle`  
+`#gettimeslot`  
+`#getdate`  
+
+- *recording.html.footer*  
+`#getbasepath` *`g`*  
+`#getdlname` *`g`*  
+`#getnextbasepath` *`g`*  
+`#getnextdate`  
+`#getnexttitle`  
+
+#### web-app interfacing
+
+> client js application path: `${WEB_BASE}/js/trackplayer.js`
+
+The client app interacts with the following page DOM elements:
+- *`location.hash`*
+- *`document.title`*
+- `audio`
+- `#trackname`
+- `#timeleft`
+- `pre.playlist` (auto-added)
+- `a#playnext`
+- `#mp3`
+- `#ogg`
+
+### track listing pages
+
+#### recorded tracks (from last `MP3_HIST` hours)
+
+web path: **`mp3/index.html`**, **`mp3/playlist.{m3u,xspf}`**
+
+- *mp3.xspf.header*  
+`#getxmldate`
+- *mp3.{html,m3u,xspf}.footer*
+
+#### daily playlist
+
+web path: *`playlists/{{ date }}.{{ format }}`* **`playlists/%Y_%m_%d.{txt,html}`**
+
+- *playlist.html.header*  
+`#getdate`
+- *playlist.html.footer*  
+`#getfile`
+- *playlist.txt.separator*  
+`#gettitle`  
+`#gettimeslot`  
+
+#### daily playlists index
+
+web path: **`playlists/index.html`**
+
+- *pl_index.html.footer*
 
 ## *web-server configuration*
 

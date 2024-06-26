@@ -12,7 +12,7 @@
 </head>
 <body>
 	<h2><a href="http://radio.spodeli.org/kanal103/">КАНАЛ 103</a> - #gettitle</h2>
-	<h3>#getdate</h3>
+	<h3>#getdate [<small>#gettimeslot</small>]</h3>
 	<audio id="recordedstream0" preload="metadata" controls>
 		<source src="//radio.spodeli.org/kanal103/#getbasepath.ogg" type="audio/ogg; codecs=vorbis" />
 		<source src="//radio.spodeli.org/kanal103/#getbasepath.mp3" type="audio/mpeg" />
