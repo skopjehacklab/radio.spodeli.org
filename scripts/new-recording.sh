@@ -98,15 +98,12 @@ if [ -n "$prev_rec" ]; then # finalize previous recording
 
 	# create recording html playlist
 	echo "<pre id='playlist' class='playlist'>" >> "$rec_html"
-	playlist="$(tail -n +2 "$new_rec".txt | sort -u "$prev_rec".{txt,parts} "$new_rec".parts - | tee -a "$rec_html" | cut -c 21-)"
-	echo "</pre><script src='https:$WEB_BASE/js/trackplayer.js'></script>" >> "$rec_html"
-	# add recording html footer
-	dl_filename=$(date -d @${base_ts} +%F)_$(basename "$prev_rec")
-	sed -e "s|#getbasepath|$prev_rec|g" -e "s|#getdlname|$dl_filename|g" -e "s|#getnexttitle|$artist|" \
-		-e "s|#getnextdate|$(date +%A), $timeslot|" -e "s|#getnextbasepath|$new_rec|g" \
-		"$APP_ROOT/templates/recording".html.footer >> "$rec_html"
-	# publish the recording html page
-	mv "$rec_html" "$prev_rec".html
+	playlist="$(tail -n +2 "$new_rec".txt | LC_COLLATE=C sort -d "$prev_rec".{txt,parts} "$new_rec".parts - | cut -c 21-)"
+
+	[ -s "$prev_rec".parts ] || rm "$prev_rec".parts
+	shopt -s nullglob
+	rec_parts=()
+	basetime=$(date -d @${base_ts} +'%F %T.%N')
 
 	# metadata info
 	datetime=$(date -d @${base_ts} +'%Y%d%m%H%M')
@@ -125,7 +122,20 @@ if [ -n "$prev_rec" ]; then # finalize previous recording
 		# generate index from cue data
 		index="$(grep -aF 'INDEX 01' "$fname".cue | sed -e 's/^.*01 //' -e 's/:00$//')"
 		count=$(wc -l <<<"$index")
+
+		rec_parts+=($fname)
 		paste <(echo "$index") <(head -${count} <<<"$playlist") > "$fname".index
+
+		if [ -z "$start_ts" ]; then # .0000
+			start_ts=$(date -d "${basetime:0:16}:00" +%s)
+		else # .000N
+			start_ts=$(bc <<<"$(date -r "$mp3" +'%s.%N') - $tlen - ${basetime:17}")
+			echo -e "</pre><pre id='playlist.${fname:12}' class='playlist'>" >> "$rec_html"
+		fi
+		# transform index to absolute timestamps
+		index="$(sed "s/:/ * 60 + $start_ts + /" <<<"$index" | bc | sed 's/^/@/' | date -f - +'%d.%m.%Y %T')"
+		paste -d' ' <(echo "$index") <(head -${count} <<<"$playlist") >> "$rec_html"
+
 		# remaining playlist
 		playlist="$(tail -n +$((++count)) <<<"$playlist")"
 
@@ -134,9 +144,20 @@ if [ -n "$prev_rec" ]; then # finalize previous recording
 		tsiz=$(stat --format='%s' "$mp3") # TSIZ    Size (bytes, without metadata)
 		# add MP3 tags
 		id3v2 --id3v2-only --TSIZ $tsiz --TLEN $tlen --TYER $tyer --TDAT $tdat --TIME $time --TRSN "$trsn" --WOAF "$woaf" --WORS "$wors" "$mp3"
+	done
 
+	echo "</pre><script src='https:$WEB_BASE/js/trackplayer.js'></script>" >> "$rec_html"
+	# add recording html footer
+	dl_filename=$(date -d @${base_ts} +%F)_$(basename "$prev_rec")
+	sed -e "s|#getbasepath|$prev_rec|g" -e "s|#getdlname|$dl_filename|g" -e "s|#getnexttitle|$artist|" \
+		-e "s|#getnextdate|$(date +%A), $timeslot|" -e "s|#getnextbasepath|$new_rec|g" \
+		"$APP_ROOT/templates/recording".html.footer >> "$rec_html"
+	# publish the recording html page
+	mv "$rec_html" "$prev_rec".html
+
+	for fname in "${rec_parts[@]}"; do
 		# create corresponding ogg media
-		ffmpeg -i "$mp3" -nostdin -nostats -hide_banner -loglevel level+warning -f s16le -acodec pcm_s16le - 2>> "$LOG_FILE" | nice oggenc --quiet --raw --ignorelength --utf8 --comment "ORGANIZATION=$STATION_NAME" --comment="PUBLISHER=radio.spodeli.org" --comment="DESCRIPTION=$woaf" --bitrate=${OGG_BITRATE:-192} --output="$fname".ogg -
+		ffmpeg -i "$fname".mp3 -nostdin -nostats -hide_banner -loglevel level+warning -f s16le -acodec pcm_s16le - 2>> "$LOG_FILE" | nice oggenc --quiet --raw --ignorelength --utf8 --comment "ORGANIZATION=$STATION_NAME" --comment="PUBLISHER=radio.spodeli.org" --comment="DESCRIPTION=$woaf" --bitrate=${OGG_BITRATE:-192} --output="$fname".ogg -
 		#lame -t --quiet --decode "$mp3" - | nice oggenc $ogg_opts --output="${mp3/%mp3/ogg}".ogg -
 		vorbiscomment --append --raw --commentfile "$prev_rec".tag "$fname".ogg
 	done
