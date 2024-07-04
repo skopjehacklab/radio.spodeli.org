@@ -14,12 +14,12 @@ d.addEventListener('DOMContentLoaded', function () {
 	var initPlaylist = function () {
 		this.index = -1;
 		var diff = 0;
-		var rows = pre_playlist.textContent.split('\n'); // last row is empty
-		var richPlaylist = d.createElement("pre");
-		richPlaylist.title = "Клик врз трака за директен пристап";
+		var rows = pre_playlist.textContent.split('\n').slice(0, -1); // last row is empty
+		this.tracklist = d.createElement("pre");
+		this.tracklist.title = "Клик врз трака за директен пристап";
 		var extraTracks = "";
 
-		for (var i = 0; i < rows.length - 1; i++) {
+		for (var i = 0; i < rows.length; i++) {
 			var datetimeparts = rows[i].split(' ', 2);
 			if (!rec_datetime) {
 				rec_datetime = parseDate(datetimeparts);
@@ -35,7 +35,7 @@ d.addEventListener('DOMContentLoaded', function () {
 				}
 			}
 
-			if (!playlist[this.offset] || diff < playlist[this.offset][0] + this.duration) {
+			if (i === 0 || diff < playlist[this.offset][0] + this.duration) {
 				playlist.push([diff, datetimeparts[0], datetimeparts[1], rows[i].slice(20)]);
 			}
 			else {
@@ -50,13 +50,12 @@ d.addEventListener('DOMContentLoaded', function () {
 			playlist[i].push(['(', duration < 60 ? duration : formatDuration(duration), ')'].join(''));
 			htmlTrack.textContent = playlist[i].slice(1).join(' ');
 			htmlTrack.onclick = (event) => seekTrack.call(this, event.target);
-			richPlaylist.appendChild(htmlTrack);
+			this.tracklist.appendChild(htmlTrack);
 		}
 
-		pre_playlist.parentNode.replaceChild(richPlaylist, pre_playlist);
-		this.tracklist = richPlaylist;
-
+		pre_playlist.parentNode.replaceChild(this.tracklist, pre_playlist);
 		pre_playlist = this.tracklist.nextSibling;
+
 		if (pre_playlist.nodeName === "PRE" && pre_playlist.classList.contains('playlist')) {
 			this.addEventListener('play', playPart);
 			setTimeout((partnumber) => loadNextPart.call(this, partnumber), 0, pre_playlist.id.slice(8));
@@ -73,7 +72,12 @@ d.addEventListener('DOMContentLoaded', function () {
 		this.addEventListener('pause', updateCurrentTrackStatus);
 		this.addEventListener('timeupdate', updateTrackInfo);
 		this.addEventListener('volumechange', function () {
-			localStorage["volume"] = this.volume;
+			if (this.volume != localStorage["volume"]) {
+				localStorage["volume"] = this.volume;
+				for (i = 0; i < players.length; i++) if (this !== players[i]) {
+					players[i].volume = this.volume;
+				}
+			}
 		});
 
 		// jump to specified time
@@ -104,7 +108,7 @@ d.addEventListener('DOMContentLoaded', function () {
 			missing.textContent = extraTracks;
 			this.tracklist.insertAdjacentElement('afterend', missing);
 		}
-	}
+	};
 
 	var loadNextPart = function (partnumber) {
 		var nextpart = domPlayer.cloneNode(false);
@@ -147,7 +151,7 @@ d.addEventListener('DOMContentLoaded', function () {
 				domPlayer = this;
 			}
 		}
-	}
+	};
 
 	var seekTrack = function (target) {
 		while (!target.title) { target = target.parentElement; }
@@ -158,48 +162,49 @@ d.addEventListener('DOMContentLoaded', function () {
 		if (domPlayer.paused) {
 			domPlayer.play();
 		}
-	}
+	};
 
 	var updateTrackIndex = function (new_index) {
 		var track, track_dom;
-		if (this.index > -1) {
-			track_dom = this.tracklist.children[this.index];
-			track_dom.textContent = playlist[this.offset + this.index].slice(1).join(" ");
+		if (this.index !== new_index - this.offset) {
+			if (this.index > -1) {
+				track_dom = this.tracklist.children[this.index];
+				track_dom.textContent = playlist[this.offset + this.index].slice(1).join(" ");
+			}
+
+			if (new_index > -1) {
+				this.index = new_index - this.offset;
+				track = playlist[new_index];
+				track_dom = this.tracklist.children[this.index];
+				track_dom.innerHTML = ['<b>', track[1], ' <span>', track[2], '</span> ', track.slice(3).join(' '), '</b>'].join('');
+				this.display_time = track_dom.querySelector('span');
+			}
+			else {
+				this.index = -1;
+			}
 		}
-		if (this === domPlayer) {
+
+		if (new_index > -1 && this === domPlayer) {
+			d.getElementById("trackname").textContent = playlist[new_index][3];
+			if (!this.paused) {
+				d.title = playlist[new_index][3] + maintitle;
+			}
 			track_index = new_index;
 		}
-		if (new_index > -1) {
-			this.index = new_index - this.offset;
-			track = playlist[new_index];
-			if (this === domPlayer) {
-				d.getElementById("trackname").textContent = track[3];
-			}
-			track_dom = this.tracklist.children[this.index];
-			track_dom.innerHTML = ['<b>', track[1], ' <span>', track[2], '</span> ', track.slice(3).join(' '), '</b>'].join('');
-			this.display_time = track_dom.querySelector('span');
-			if (!this.paused) {
-				d.title = track[3] + maintitle;
-			}
-		}
-		else {
-			this.index = -1;
-		}
-	}
+	};
 
 	var updateTrackInfo = function (event) {
 		if (this.currentTime >> 0 !== pl_time - playlist[this.offset][0]) {
 			pl_time = playlist[this.offset][0] + this.currentTime >> 0;
-			if (track_index + 1 < playlist.length && pl_time >= playlist[track_index + 1][0]) {
-				var i = track_index + 2;
-				while (i < playlist.length && pl_time >= playlist[i][0]) { i++; }
-				updateTrackIndex.call(this, i - 1);
+			var i = this.offset + this.index;
+			if (i + 1 < playlist.length && pl_time >= playlist[i + 1][0]) {
+				while (i + 1 < playlist.length && pl_time >= playlist[i + 1][0]) { i++; }
 			}
-			else if (pl_time < playlist[track_index][0]) {
-				var i = track_index - 1;
+			else {
 				while (pl_time < playlist[i][0]) { i--; }
-				updateTrackIndex.call(this, i);
 			}
+			i !== track_index && updateTrackIndex.call(this, i);
+
 			var new_time = new Date(rec_datetime.getTime() + pl_time * 1000);
 			// this fails a bit when play-time date changes
 			this.display_time.textContent = new_time.toTimeString().slice(0, 9) + (this.paused ? "᱿" : "‣🔊");
@@ -208,7 +213,7 @@ d.addEventListener('DOMContentLoaded', function () {
 				d.getElementById("timeleft").textContent = timeleft < 60 ? timeleft : formatDuration(timeleft);
 			}
 		}
-	}
+	};
 
 	var updateCurrentTrackStatus = function (event) {
 		if (this.display_time) {
@@ -228,7 +233,7 @@ d.addEventListener('DOMContentLoaded', function () {
 		var dateparts = datetimeparts[0].split('.');
 		var timeparts = datetimeparts[1].split(':');
 		return new Date(dateparts[2], dateparts[1] - 1, dateparts[0], timeparts[0], timeparts[1], timeparts[2]);
-	}
+	};
 
 	var formatDuration = function (seconds) { // [[hours:]min:]sec
 		if (seconds < 3600) {
@@ -242,7 +247,7 @@ d.addEventListener('DOMContentLoaded', function () {
 		seconds = seconds % 60;
 		duration.push(seconds < 10 ? '0' + seconds : seconds);
 		return duration.join(':');
-	}
+	};
 
 	domPlayer.readyState > 0 ? initPlaylist.call(domPlayer) : domPlayer.addEventListener('loadedmetadata', initPlaylist);
 });
