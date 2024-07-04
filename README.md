@@ -234,6 +234,7 @@ The client app interacts with the following page DOM elements:
 - *`location.hash`*
 - *`document.title`*
 - `audio`
+- `#playtime`
 - `#trackname`
 - `#timeleft`
 - `pre.playlist` (auto-added)

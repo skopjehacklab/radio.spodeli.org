@@ -4,14 +4,14 @@ d.addEventListener('DOMContentLoaded', function () {
 	var track_index = -1;
 	var pl_time = -1;
 	var playlist = new Array();
-	var maintitle = " | " + d.title;
+	var maintitle = " ⏵ " + d.title;
 	var pre_playlist = d.getElementById("playlist");
 	var players = d.getElementsByTagName("audio");
 	var domPlayer = players[0];
 	var rec_datetime; // start of first track in playlist
 
 	// interactive playlist for each recorded segment
-	var initPlaylist = function () {
+	var initPlaylist = function (event) {
 		this.index = -1;
 		var diff = 0;
 		var rows = pre_playlist.textContent.split('\n').slice(0, -1); // last row is empty
@@ -47,7 +47,7 @@ d.addEventListener('DOMContentLoaded', function () {
 			var htmlTrack = d.createElement("span");
 			htmlTrack.title = "#" + playlist[i][0];
 			var duration = (i + 1 < playlist.length ? playlist[i + 1][0] : playlist[this.offset][0] + this.duration >> 0) - playlist[i][0];
-			playlist[i].push(['(', duration < 60 ? duration : formatDuration(duration), ')'].join(''));
+			playlist[i].push(['⤅', duration < 60 ? duration : formatDuration(duration)].join(' '));
 			htmlTrack.textContent = playlist[i].slice(1).join(' ');
 			htmlTrack.onclick = (event) => seekTrack.call(this, event.target);
 			this.tracklist.appendChild(htmlTrack);
@@ -68,7 +68,6 @@ d.addEventListener('DOMContentLoaded', function () {
 		if (typeof localStorage["volume"] !== 'undefined' && localStorage["volume"] !== null) {
 			this.volume = localStorage["volume"];
 		}
-		this.addEventListener('play', updateCurrentTrackStatus);
 		this.addEventListener('pause', updateCurrentTrackStatus);
 		this.addEventListener('timeupdate', updateTrackInfo);
 		this.addEventListener('volumechange', function () {
@@ -114,16 +113,16 @@ d.addEventListener('DOMContentLoaded', function () {
 		var nextpart = domPlayer.cloneNode(false);
 		var base_name = domPlayer.firstElementChild.src.slice(0, -4);
 
-		d.getElementById("mp3").appendChild(d.createTextNode(" | "));
 		var mp3Url = d.createElement("a");
 		mp3Url.href = [base_name, partnumber, ".mp3"].join('');
 		mp3Url.appendChild(d.createTextNode(partnumber + ".mp3"));
+		d.getElementById("mp3").appendChild(d.createTextNode(" | "));
 		d.getElementById("mp3").appendChild(mp3Url);
 
-		d.getElementById("ogg").appendChild(d.createTextNode(" | "));
 		var oggUrl = d.createElement("a");
 		oggUrl.href = [base_name, partnumber, ".ogg"].join('');
 		oggUrl.appendChild(d.createTextNode(partnumber + ".ogg"));
+		d.getElementById("ogg").appendChild(d.createTextNode(" | "));
 		d.getElementById("ogg").appendChild(oggUrl);
 
 		nextpart.id = "recording" + partnumber;
@@ -132,7 +131,7 @@ d.addEventListener('DOMContentLoaded', function () {
 		this.insertAdjacentText('afterend', ' ');
 
 		this.addEventListener('pause', (event) => {
-			if (this.currentTime === this.duration) {
+			if (this.ended) {
 				updateTrackIndex.call(this, -1);
 				nextpart.currentTime = 0;
 				nextpart.play();
@@ -143,24 +142,21 @@ d.addEventListener('DOMContentLoaded', function () {
 	};
 
 	var playPart = function (event) {
-		for (i = 0; i < players.length; i++) {
-			if (this !== players[i]) {
+		if (this !== domPlayer) {
+			for (i = 0; i < players.length; i++) if (this !== players[i]) {
 				!players[i].paused && players[i].pause();
 			}
-			else if (this !== domPlayer) {
-				domPlayer = this;
-			}
+			domPlayer = this;
 		}
 	};
 
 	var seekTrack = function (target) {
 		while (!target.title) { target = target.parentElement; }
 		var seconds = target.title.slice(1);
-		domPlayer = this;
-		domPlayer.currentTime = seconds - playlist[this.offset][0] + ".1";
+		this.currentTime = seconds - playlist[this.offset][0] + ".1";
 		wl.hash = seconds;
-		if (domPlayer.paused) {
-			domPlayer.play();
+		if (this.paused) {
+			this.play();
 		}
 	};
 
@@ -185,7 +181,7 @@ d.addEventListener('DOMContentLoaded', function () {
 		}
 
 		if (new_index > -1 && this === domPlayer) {
-			d.getElementById("trackname").textContent = playlist[new_index][3];
+			updateDomText("#trackname", playlist[new_index][3]);
 			if (!this.paused) {
 				d.title = playlist[new_index][3] + maintitle;
 			}
@@ -194,7 +190,7 @@ d.addEventListener('DOMContentLoaded', function () {
 	};
 
 	var updateTrackInfo = function (event) {
-		if (this.currentTime >> 0 !== pl_time - playlist[this.offset][0]) {
+		if (this.currentTime >> 0 !== pl_time - playlist[this.offset][0] || event.type !== "timeupdate") {
 			pl_time = playlist[this.offset][0] + this.currentTime >> 0;
 			var i = this.offset + this.index;
 			if (i + 1 < playlist.length && pl_time >= playlist[i + 1][0]) {
@@ -210,23 +206,21 @@ d.addEventListener('DOMContentLoaded', function () {
 			this.display_time.textContent = new_time.toTimeString().slice(0, 9) + (this.paused ? "᱿" : "‣🔊");
 			if (this === domPlayer) {
 				var timeleft = this.index + 1 === this.tracklist.childElementCount ? this.duration - this.currentTime >> 0 : playlist[track_index + 1][0] - pl_time;
-				d.getElementById("timeleft").textContent = timeleft < 60 ? timeleft : formatDuration(timeleft);
+				updateDomText("#timeleft", timeleft < 60 ? timeleft : formatDuration(timeleft));
+				updateDomText("#playtime", this.display_time.textContent.slice(0, 10));
 			}
 		}
 	};
 
 	var updateCurrentTrackStatus = function (event) {
-		if (this.display_time) {
-			this.display_time.textContent = this.display_time.textContent.slice(0, 9) + (this.paused ? "᱿" : "‣🔊");
-		}
-		if (!this.paused) {
-			if (track_index > -1) {
-				d.title = playlist[track_index][3] + maintitle;
-			}
-		}
-		else if (this === domPlayer) {
+		if (this === domPlayer && this.paused && !this.seeking) {
 			d.title = maintitle.slice(3);
+			updateTrackInfo.call(this, event);
 		}
+	};
+
+	var updateDomText = (selector, text) => {
+		d.querySelectorAll(selector).forEach(node => node.textContent = text);
 	};
 
 	var parseDate = function (datetimeparts) { // ( %d.%m.%Y, %H:%M:%S )
