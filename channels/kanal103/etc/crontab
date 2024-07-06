@@ -3,7 +3,7 @@ CRON_TZ="Europe/Skopje"
 LANG=mk_MK.UTF-8
 
 # MONDAY / ПОНЕДЕЛНИК
-00 04 * * 1 . ~/etc/radio.env && $RADIO_APP/new-recording.sh 0400-0900 "Утринска плеј-листа: понеделник"
+00 05 * * 1 . ~/etc/radio.env && $RADIO_APP/new-recording.sh 0500-0900 "Утринска плеј-листа: понеделник"
 00 09 * * 1 . ~/etc/radio.env && $RADIO_APP/new-recording.sh 0900-1200 "РАДИО МАРС: Александар Сандревски"
 00 12 * * 1 . ~/etc/radio.env && $RADIO_APP/new-recording.sh 1200-1600 "Дневна плеј-листа: понеделник"
 00 16 * * 1 . ~/etc/radio.env && $RADIO_APP/new-recording.sh 1600-1800 "РОЗЕ КАДИЛАК: Костадин Шурбановски + Ангела Јовковска"
@@ -11,10 +11,10 @@ LANG=mk_MK.UTF-8
 00 20 * * 1 . ~/etc/radio.env && $RADIO_APP/new-recording.sh 2000-2200 "ТАЖЕН СИН: Андреа Делипапаз"
 00 22 * * 1 . ~/etc/radio.env && $RADIO_APP/new-recording.sh 2200-2400 "ПЕСНИ, ПРИКАЗНИ И СОН: Тома Димовски"
 
-00 00 * * 2 . ~/etc/radio.env && $RADIO_APP/new-recording.sh 0000-0400 "Ноќна плеј-листа: понеделник/вторник"
+00 00 * * 2 . ~/etc/radio.env && $RADIO_APP/new-recording.sh 0000-0500 "Ноќна плеј-листа: понеделник/вторник"
 
 # TUESDAY / ВТОРНИК
-00 04 * * 2 . ~/etc/radio.env && $RADIO_APP/new-recording.sh 0400-0900 "Утринска плеј-листа: вторник"
+00 05 * * 2 . ~/etc/radio.env && $RADIO_APP/new-recording.sh 0500-0900 "Утринска плеј-листа: вторник"
 00 09 * * 2 . ~/etc/radio.env && $RADIO_APP/new-recording.sh 0900-1200 "РАДИО МАРС: Александар Сандревски"
 00 12 * * 2 . ~/etc/radio.env && $RADIO_APP/new-recording.sh 1200-1600 "Дневна плеј-листа: вторник"
 00 16 * * 2 . ~/etc/radio.env && $RADIO_APP/new-recording.sh 1600-1900 "GISTRO FM: Vladimir Skočajić - Skoča"
@@ -22,10 +22,10 @@ LANG=mk_MK.UTF-8
 00 21 * * 2 . ~/etc/radio.env && $RADIO_APP/new-recording.sh 2100-2300 "MODUS VIVENDI: Ангела Јовковска"
 00 23 * * 2 . ~/etc/radio.env && $RADIO_APP/new-recording.sh 2300-2400 "RADIA: radia.fm"
 
-00 00 * * 3 . ~/etc/radio.env && $RADIO_APP/new-recording.sh 0000-0400 "Ноќна плеј-листа: вторник/среда"
+00 00 * * 3 . ~/etc/radio.env && $RADIO_APP/new-recording.sh 0000-0500 "Ноќна плеј-листа: вторник/среда"
 
 # WEDNESDAY / СРЕДА
-00 04 * * 3 . ~/etc/radio.env && $RADIO_APP/new-recording.sh 0400-0900 "Утринска плеј-листа: среда"
+00 05 * * 3 . ~/etc/radio.env && $RADIO_APP/new-recording.sh 0500-0900 "Утринска плеј-листа: среда"
 00 09 * * 3 . ~/etc/radio.env && $RADIO_APP/new-recording.sh 0900-1200 "РАДИО МАРС: Александар Сандревски"
 00 12 * * 3 . ~/etc/radio.env && $RADIO_APP/new-recording.sh 1200-1500 "Дневна плеј-листа: среда (1/2)"
 00 15 * * 3 . ~/etc/radio.env && $RADIO_APP/new-recording.sh 1500-1800 "Дневна плеј-листа: среда (2/2)"
@@ -33,10 +33,10 @@ LANG=mk_MK.UTF-8
 00 20 * * 3 . ~/etc/radio.env && $RADIO_APP/new-recording.sh 2000-2200 "POST GLOBAL: Tони Димитров"
 00 22 * * 3 . ~/etc/radio.env && $RADIO_APP/new-recording.sh 2200-2400 "DANSE MACABRE: Златко Ѓелески"
 
-00 00 * * 4 . ~/etc/radio.env && $RADIO_APP/new-recording.sh 0000-0400 "Ноќна плеј-листа: среда/четврток"
+00 00 * * 4 . ~/etc/radio.env && $RADIO_APP/new-recording.sh 0000-0500 "Ноќна плеј-листа: среда/четврток"
 
 # THURSDAY / ЧЕТВРТОК
-00 04 * * 4 . ~/etc/radio.env && $RADIO_APP/new-recording.sh 0400-0900 "Утринска плеј-листа: четврток"
+00 05 * * 4 . ~/etc/radio.env && $RADIO_APP/new-recording.sh 0500-0900 "Утринска плеј-листа: четврток"
 00 09 * * 4 . ~/etc/radio.env && $RADIO_APP/new-recording.sh 0900-1200 "РАДИО МАРС: Александар Сандревски"
 00 12 * * 4 . ~/etc/radio.env && $RADIO_APP/new-recording.sh 1200-1500 "Дневна плеј-листа: четврток (1/2)"
 00 15 * * 4 . ~/etc/radio.env && $RADIO_APP/new-recording.sh 1500-1800 "Дневна плеј-листа: четврток (2/2)"
@@ -44,10 +44,10 @@ LANG=mk_MK.UTF-8
 00 20 * * 4 . ~/etc/radio.env && $RADIO_APP/new-recording.sh 2000-2200 "SOFTCOEURE: Тања Иванова"
 00 22 * * 4 . ~/etc/radio.env && $RADIO_APP/new-recording.sh 2200-2400 "ОПСКУРЕН ЏУБОКС: Исток Улчар + Рина Јанкуловска"
 
-00 00 * * 5 . ~/etc/radio.env && $RADIO_APP/new-recording.sh 0000-0400 "Ноќна плеј-листа: четврток/петок"
+00 00 * * 5 . ~/etc/radio.env && $RADIO_APP/new-recording.sh 0000-0500 "Ноќна плеј-листа: четврток/петок"
 
 # FRIDAY / ПЕТОК
-00 04 * * 5 . ~/etc/radio.env && $RADIO_APP/new-recording.sh 0400-0900 "Утринска плеј-листа: петок"
+00 05 * * 5 . ~/etc/radio.env && $RADIO_APP/new-recording.sh 0500-0900 "Утринска плеј-листа: петок"
 00 09 * * 5 . ~/etc/radio.env && $RADIO_APP/new-recording.sh 0900-1200 "РАДИО МАРС: Александар Сандревски"
 00 12 * * 5 . ~/etc/radio.env && $RADIO_APP/new-recording.sh 1200-1500 "Дневна плеј-листа: петок (1/2)"
 00 15 * * 5 . ~/etc/radio.env && $RADIO_APP/new-recording.sh 1500-1800 "Дневна плеј-листа: петок (2/2)"
@@ -78,5 +78,5 @@ LANG=mk_MK.UTF-8
 00 18 * * 0 . ~/etc/radio.env && $RADIO_APP/new-recording.sh 1800-2000 "КОМПАС: Анастасија Кочева + Томи Кариќ + Јоана Ристеска"
 00 20 * * 0 . ~/etc/radio.env && $RADIO_APP/new-recording.sh 2000-2400 "РАДИО ШКОЛКА"
 
-00 00 * * 1 . ~/etc/radio.env && $RADIO_APP/new-recording.sh 0000-0400 "Ноќна плеј-листа: недела/понеделник"
+00 00 * * 1 . ~/etc/radio.env && $RADIO_APP/new-recording.sh 0000-0500 "Ноќна плеј-листа: недела/понеделник"
 

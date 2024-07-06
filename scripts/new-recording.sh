@@ -85,7 +85,7 @@ fi
 
 # previous recording stopped
 [ -n "$prev_id" ] && wait $prev_id && rm "$PID_FILE"~
-
+# temporary recording html file
 rec_html="$APP_ROOT/var/recording".html
 
 if [ -n "$prev_rec" ]; then # finalize previous recording
@@ -117,33 +117,37 @@ if [ -n "$prev_rec" ]; then # finalize previous recording
 	for mp3 in "$prev_rec".0*.mp3; do
 		# fix garbage at beginning and end
 		mp3val "$mp3" -f -t -nb -si -l"$LOG_FILE" > /dev/null
-		tlen=$(soxi -D "$mp3") # duration in seconds
+		tlen=$(soxi -D "$mp3") # duration in seconds (float)
 		fname="${mp3/%.mp3}" # filepath without extension
 		# generate index from cue data
 		index="$(grep -aF 'INDEX 01' "$fname".cue | sed -e 's/^.*01 //' -e 's/:00$//')"
 		count=$(wc -l <<<"$index")
 
-		rec_parts+=($fname)
-		paste <(echo "$index") <(head -${count} <<<"$playlist") > "$fname".index
+		if [ ${tlen/%.*/999} -lt ${MP3_MIN_LEN:-1000} ]; then
+			(echo -n "Length ($tlen) below limit: " | ts '%F %T' && rm -v "$mp3") >> "$LOG_FILE"
+		else
+			rec_parts+=($fname)
+			paste <(echo "$index") <(head -${count} <<<"$playlist") > "$fname".index
 
-		if [ -z "$start_ts" ]; then # .0000
-			start_ts=$(date -d "${basetime:0:16}:00" +%s)
-		else # .000N
-			start_ts=$(bc <<<"$(date -r "$mp3" +'%s.%N') - $tlen - ${basetime:17}")
-			echo -e "</pre><pre id='playlist.${fname:12}' class='playlist'>" >> "$rec_html"
+			if [ -z "$start_ts" ]; then # .0000
+				start_ts=$(date -d "${basetime:0:16}:00" +%s)
+			else # .000N
+				start_ts=$(bc <<<"$(date -r "$mp3" +'%s.%N') - $tlen - ${basetime:17}")
+				echo -e "</pre><pre id='playlist.${fname:12}' class='playlist'>" >> "$rec_html"
+			fi
+			# transform index to absolute timestamps
+			index="$(sed "s/:/ * 60 + $start_ts + /" <<<"$index" | bc | sed 's/^/@/' | date -f - +'%d.%m.%Y %T')"
+			paste -d' ' <(echo "$index") <(head -${count} <<<"$playlist") >> "$rec_html"
+
+			# convert to miliseconds (int)
+			tlen=$(bc <<<"scale=0; $tlen * 1000/1") # TLEN    Length (ms)
+			tsiz=$(stat --format='%s' "$mp3") # TSIZ    Size (bytes, without metadata)
+			# add MP3 tags
+			id3v2 --id3v2-only --TSIZ $tsiz --TLEN $tlen --TYER $tyer --TDAT $tdat --TIME $time --TRSN "$trsn" --WOAF "$woaf" --WORS "$wors" "$mp3"
 		fi
-		# transform index to absolute timestamps
-		index="$(sed "s/:/ * 60 + $start_ts + /" <<<"$index" | bc | sed 's/^/@/' | date -f - +'%d.%m.%Y %T')"
-		paste -d' ' <(echo "$index") <(head -${count} <<<"$playlist") >> "$rec_html"
 
 		# remaining playlist
 		playlist="$(tail -n +$((++count)) <<<"$playlist")"
-
-		# convert to miliseconds (int)
-		tlen=$(bc <<<"scale=0; $tlen * 1000/1") # TLEN    Length (ms)
-		tsiz=$(stat --format='%s' "$mp3") # TSIZ    Size (bytes, without metadata)
-		# add MP3 tags
-		id3v2 --id3v2-only --TSIZ $tsiz --TLEN $tlen --TYER $tyer --TDAT $tdat --TIME $time --TRSN "$trsn" --WOAF "$woaf" --WORS "$wors" "$mp3"
 	done
 
 	echo "</pre><script src='https:$WEB_BASE/js/trackplayer.js'></script>" >> "$rec_html"
