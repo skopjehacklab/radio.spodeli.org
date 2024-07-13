@@ -4,19 +4,24 @@
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 	<title>Канал 103 - #gettitle</title>
 	<style>
-		li, pre { line-height: 1.4em }
+		li, pre, h3 { line-height: 1.4em }
 		body { max-width: 90%; margin: 1em }
-		pre span:hover { color: white; background: black; cursor: pointer }
+		pre { white-space-collapse: preserve-breaks }
+		pre span:hover, .btn:hover { color: white; background: black; cursor: pointer }
 		audio { min-width: 32% }
 	</style>
 </head>
 <body>
 	<h2><a href="http://radio.spodeli.org/kanal103/">КАНАЛ 103</a> - #gettitle</h2>
-	<h3><small id="playtime" title="Време на емитување"></small> #getdate [<small>#gettimeslot</small>]</h3>
-	<audio id="recordedstream0" preload="metadata" controls>
+	<h3><small id="playtime" title="Време на емитување"></small> #getdate ⹕<small> #gettimeslot </small>⹖</h3>
+	<div>
+		<span title="play / pause" class="btn toggle_play"> ⏯ </span>
+		<strong id="trackname"></strong>
+		<small title="Преостанато време">[ <span id="timeleft">клик врз лизгачот или плеј-листата за директен пристап до саканото време</span> ]</small>
+	</div>
+	<audio id="recording" preload="metadata" controls>
 		<source src="//radio.spodeli.org/kanal103/#getbasepath.ogg" type="audio/ogg; codecs=vorbis" />
 		<source src="//radio.spodeli.org/kanal103/#getbasepath.mp3" type="audio/mpeg" />
 		Твојот бровсер не поддржува HTML5 audio.
 	</audio>
-	<div><strong id="trackname"></strong> <small title="Преостанато време">[ <span id="timeleft">Клик врз лизгачот за директен пристап до саканото време</span> ]</small></div>
 	<br>

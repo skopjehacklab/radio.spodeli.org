@@ -52,19 +52,17 @@ d.addEventListener('DOMContentLoaded', (event) => {
 
 		if (pre_playlist.nodeName === "PRE" && pre_playlist.classList.contains('playlist')) {
 			this.addEventListener('play', playPart);
+			//this.next_part = pre_playlist.id.slice(8);
 			setTimeout((partnumber) => loadNextPart.call(this, partnumber), 0, pre_playlist.id.slice(8));
 		}
-		else {
+		else { // final part
 			pre_playlist = null;
 			this !== domPlayer && this.addEventListener('play', playPart);
 		}
 
-		if (typeof localStorage["volume"] !== 'undefined' && localStorage["volume"] !== null) {
-			this.volume = localStorage["volume"];
-		}
 		this.addEventListener('pause', updateCurrentTrackStatus);
 		this.addEventListener('timeupdate', updateTrackInfo);
-		this.addEventListener('volumechange', function () {
+		this.addEventListener('volumechange', (event) => {
 			if (this.volume != localStorage["volume"]) {
 				localStorage["volume"] = this.volume;
 				for (let i = 0; i < players.length; i++) if (this !== players[i]) {
@@ -122,12 +120,15 @@ d.addEventListener('DOMContentLoaded', (event) => {
 
 		nextpart.id = "recording" + partnumber;
 		nextpart.src = nextpart.canPlayType('audio/ogg;') ? oggUrl.href : mp3Url.href;
+		nextpart.volume = this.volume;
+		//nextpart.defaultMuted = false;
 		this.insertAdjacentElement('afterend', nextpart);
 		this.insertAdjacentText('afterend', ' ');
 
 		this.addEventListener('pause', (event) => {
 			if (this.ended) {
 				updateTrackIndex.call(this, -1);
+				nextpart.muted = nextpart.muted || this.muted;
 				nextpart.currentTime = 0;
 				nextpart.play();
 			}
@@ -210,7 +211,7 @@ d.addEventListener('DOMContentLoaded', (event) => {
 			if (this === domPlayer) {
 				const timeleft = this.index + 1 === this.tracklist.childElementCount ? this.duration - this.currentTime >> 0 : playlist[track_index + 1][0] - pl_time;
 				updateDomText("#timeleft", timeleft < 60 ? timeleft : formatDuration(timeleft));
-				updateDomText("#playtime", this.display_time.textContent.slice(0, 10));
+				updateDomText("#playtime", this.display_time.textContent.slice(0, 9) + (this.paused ? "᱿" : "▸"));
 			}
 		}
 	};
@@ -237,7 +238,7 @@ d.addEventListener('DOMContentLoaded', (event) => {
 		}
 		else {
 			var duration = [~~(seconds / 3600)]; // hours
-			let minutes = ~~(seconds / 60) % 60;
+			const minutes = ~~(seconds / 60) % 60;
 			duration.push(minutes < 10 ? '0' + minutes : minutes);
 		}
 		seconds = seconds % 60;
@@ -245,5 +246,13 @@ d.addEventListener('DOMContentLoaded', (event) => {
 		return duration.join(':');
 	};
 
+	if (typeof localStorage["volume"] !== 'undefined' && localStorage["volume"] !== null) {
+		domPlayer.volume = localStorage["volume"];
+	}
+
 	domPlayer.readyState > 0 ? initPlaylist.call(domPlayer) : domPlayer.addEventListener('loadedmetadata', initPlaylist);
+
+	d.querySelectorAll('.toggle_play').forEach(node => {
+		node.onclick = () => domPlayer[domPlayer.paused ? 'play' : 'pause' ]();
+	});
 });
